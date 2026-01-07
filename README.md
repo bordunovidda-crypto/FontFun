@@ -88,37 +88,14 @@ input{margin-top:10px}
 <div class="grid" id="grid"></div>
 
 <div class="footer">
-Нажми на стиль — текст скопируется!
+Нажми на стиль — текст скопируется
 </div>
 </div>
 
 <script>
 let lang="en";
 
-const fontsEN=[
-["𝐄𝐱𝐚𝐦𝐩𝐥𝐞", mapEN("𝐀")],
-["𝘌𝘹𝘢𝘮𝘱𝘭𝘦", mapEN("𝘈")],
-["𝙀𝙭𝙖𝙢𝙥𝙡𝙚", mapEN("𝘼")],
-["𝖤𝗑𝖺𝗆𝗉𝗅𝖾", mapEN("𝖠")],
-["𝓔𝔁𝓪𝓶𝓹𝓵𝓮", mapEN("𝓐")],
-["Ｅｘａｍｐｌｅ", mapEN("Ａ")],
-["𝕰𝖝𝖆𝖒𝖕𝖑𝖊", mapEN("𝕬")],
-["ᴇxᴀᴍᴘʟᴇ", mapEN("ᴀ")],
-["ｅхａｍｐｌｅ", mapEN("ｅ")],
-["EXAMPLE", t=>t.toUpperCase()],
-["example", t=>t.toLowerCase()]
-];
-
-const fontsRU=[
-["ТеКсТ", mapRU("Т")],
-["𝘛𝘦𝘬𝘴𝘵", mapRU("𝘛")],
-["𝙏𝙚𝙠𝙨𝙩", mapRU("𝙏")],
-["𝓣𝓮𝓴𝓼𝓽", mapRU("𝓣")],
-["𝕿𝖊𝖐𝖘𝖙", mapRU("𝕿")],
-["ТЕКСТ", t=>t.toUpperCase()],
-["текст", t=>t.toLowerCase()],
-["Т е к с т", t=>t.split("").join(" ")]
-];
+/* ===== helpers ===== */
 
 function mapEN(start){
   const base="abcdefghijklmnopqrstuvwxyz";
@@ -126,8 +103,7 @@ function mapEN(start){
   return t=>t.split("").map(c=>{
     let i=base.indexOf(c.toLowerCase());
     if(i==-1)return c;
-    let ch=String.fromCodePoint(code+i);
-    return c===c.toUpperCase()?ch:ch;
+    return String.fromCodePoint(code+i);
   }).join("");
 }
 
@@ -140,6 +116,99 @@ function mapRU(start){
     return String.fromCodePoint(code+i);
   }).join("");
 }
+
+function combine(mark){
+  return t=>t.split("").map(c=>{
+    if(c===" ") return c;
+    return c + mark;
+  }).join("");
+}
+
+/* ===== special styles ===== */
+
+function smallCaps(t){
+  const m={
+    a:"ᴀ",b:"ʙ",c:"ᴄ",d:"ᴅ",e:"ᴇ",f:"ғ",
+    g:"ɢ",h:"ʜ",i:"ɪ",j:"ᴊ",k:"ᴋ",l:"ʟ",
+    m:"ᴍ",n:"ɴ",o:"ᴏ",p:"ᴘ",q:"ǫ",r:"ʀ",
+    s:"s",t:"ᴛ",u:"ᴜ",v:"ᴠ",w:"ᴡ",x:"x",y:"ʏ",z:"ᴢ"
+  };
+  return t.toLowerCase().split("").map(c=>m[c]||c).join("");
+}
+
+function circled(t){
+  const base="abcdefghijklmnopqrstuvwxyz";
+  const start=0x24D0;
+  return t.toLowerCase().split("").map(c=>{
+    let i=base.indexOf(c);
+    return i==-1?c:String.fromCodePoint(start+i);
+  }).join("");
+}
+
+function boxed(t){
+  const base="abcdefghijklmnopqrstuvwxyz";
+  const start=0x1F130;
+  return t.toUpperCase().split("").map(c=>{
+    let i=base.indexOf(c.toLowerCase());
+    return i==-1?c:String.fromCodePoint(start+i);
+  }).join("");
+}
+
+function glitch(t){
+  const marks=["\u0301","\u0302","\u0303","\u0307","\u0308"];
+  return t.split("").map(c=>{
+    if(c===" ") return c;
+    return c + marks[Math.floor(Math.random()*marks.length)];
+  }).join("");
+}
+
+/* ===== fonts ===== */
+
+const fontsEN=[
+["𝐄𝐱𝐚𝐦𝐩𝐥𝐞", mapEN("𝐀")],
+["𝘌𝘹𝘢𝘮𝘱𝘭𝘦", mapEN("𝘈")],
+["𝓔𝔁𝓪𝓶𝓹𝓵𝓮", mapEN("𝓐")],
+["𝖤𝗑𝖺𝗆𝗉𝗅𝖾", mapEN("𝖠")],
+["Ｅｘａｍｐｌｅ", mapEN("Ａ")],
+
+["Underline", combine("\u0332")],
+["Double underline", combine("\u0333")],
+["Strike", combine("\u0336")],
+["Dots below", combine("\u0323")],
+["Dots above", combine("\u0307")],
+["Waves", combine("\u0330")],
+["Cross", combine("\u033D")],
+
+["Wide", t=>t.split("").join(" ")],
+["Extra wide", t=>t.split("").join("  ")],
+
+["Small caps", smallCaps],
+["Circled", circled],
+["Boxed", boxed],
+["Glitch", glitch],
+
+["UPPERCASE", t=>t.toUpperCase()],
+["lowercase", t=>t.toLowerCase()]
+];
+
+const fontsRU=[
+["ТеКсТ", mapRU("Т")],
+["𝓣𝓮𝓴𝓼𝓽", mapRU("𝓣")],
+["𝕿𝖊𝖐𝖘𝖙", mapRU("𝕿")],
+["Подчёркнутый", combine("\u0332")],
+["Двойное подчёркивание", combine("\u0333")],
+["Зачёркнутый", combine("\u0336")],
+["Точки", combine("\u0323")],
+["Волны", combine("\u0330")],
+
+["Широкий", t=>t.split("").join(" ")],
+["ОЧЕНЬ ШИРОКИЙ", t=>t.split("").join("  ")],
+
+["ЗАГЛАВНЫЕ", t=>t.toUpperCase()],
+["строчные", t=>t.toLowerCase()]
+];
+
+/* ===== ui ===== */
 
 function switchLang(l){
   lang=l;
@@ -157,7 +226,7 @@ function render(){
     if(!name.toLowerCase().includes(q))return;
     const d=document.createElement("div");
     d.className="style";
-    d.textContent=name;
+    d.textContent=fn(input.value||name);
     d.onclick=()=>navigator.clipboard.writeText(fn(input.value));
     grid.appendChild(d);
   });
