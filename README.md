@@ -88,7 +88,7 @@ input{margin-top:10px}
 <div class="grid" id="grid"></div>
 
 <div class="footer">
-Нажми на стиль — текст скопируется
+Нажми на стиль — текст скопируется!
 </div>
 </div>
 
