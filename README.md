@@ -18,7 +18,13 @@ body{
 h1{
   text-align:center;
   font-size:22px;
-  margin-bottom:10px;
+  margin-bottom:6px;
+}
+.hint{
+  text-align:center;
+  font-size:14px;
+  margin-bottom:12px;
+  opacity:.75;
 }
 textarea,input{
   width:100%;
@@ -54,7 +60,7 @@ input{margin-top:10px}
   margin:16px 0;
   font-size:12px;
   text-align:center;
-  opacity:.5;
+  opacity:.4;
 }
 </style>
 </head>
@@ -62,6 +68,7 @@ input{margin-top:10px}
 
 <div class="wrapper">
 <h1>Красивые шрифты ✒️</h1>
+<div class="hint">Нажми на стиль — скопируется текст (EN / RU)</div>
 
 <textarea id="input" placeholder="Введите текст латиницей или кириллицей"></textarea>
 <input id="search" placeholder="Поиск стиля..." oninput="render()">
@@ -69,12 +76,12 @@ input{margin-top:10px}
 <div class="grid" id="grid"></div>
 
 <div class="footer">
-Нажми на стиль — текст скопируется и его можно вставить
+Example / Текст
 </div>
 </div>
 
 <script>
-/* ===== translit (без багов) ===== */
+/* ===== translit EN → RU (без багов) ===== */
 const tr=[
 ["sch","щ"],["yo","ё"],["zh","ж"],["ch","ч"],["sh","ш"],
 ["yu","ю"],["ya","я"],["je","э"],["ye","е"],
@@ -84,11 +91,32 @@ const tr=[
 ["r","р"],["s","с"],["t","т"],["u","у"],["f","ф"],
 ["h","х"],["c","ц"],["y","ы"]
 ];
-function translit(t){
+function toRU(t){
   if(/[а-яё]/i.test(t)) return t;
   let s=t.toLowerCase();
   tr.forEach(([a,b])=>s=s.replaceAll(a,b));
   return s;
+}
+
+/* ===== RU → EN (простая, стабильная) ===== */
+const rtl={
+а:"a",б:"b",в:"v",г:"g",д:"d",е:"e",ё:"yo",ж:"zh",
+з:"z",и:"i",й:"y",к:"k",л:"l",м:"m",н:"n",о:"o",
+п:"p",р:"r",с:"s",т:"t",у:"u",ф:"f",х:"h",
+ц:"c",ч:"ch",ш:"sh",щ:"sch",ы:"y",э:"e",ю:"yu",я:"ya"
+};
+function toEN(t){
+  return t.toLowerCase().split("").map(c=>rtl[c]||c).join("");
+}
+
+/* ===== dual text ===== */
+function dualText(text){
+  if(!text) return "";
+  if(/[а-яё]/i.test(text)){
+    return text + " / " + toEN(text);
+  }else{
+    return text + " / " + toRU(text);
+  }
 }
 
 /* ===== helpers ===== */
@@ -100,24 +128,8 @@ function mapEN(start){
     return i==-1?c:String.fromCodePoint(code+i);
   }).join("");
 }
-function mapRU(start){
-  const base="абвгдеёжзийклмнопрстуфхцчшщъыьэюя";
-  const code=start.codePointAt(0);
-  return t=>t.split("").map(c=>{
-    let i=base.indexOf(c.toLowerCase());
-    return i==-1?c:String.fromCodePoint(code+i);
-  }).join("");
-}
 function combine(mark){
   return t=>t.split("").map(c=>c===" "?c:c+mark).join("");
-}
-
-/* ===== styles ===== */
-function smallCaps(t){
-  const m={a:"ᴀ",b:"ʙ",c:"ᴄ",d:"ᴅ",e:"ᴇ",f:"ғ",g:"ɢ",h:"ʜ",i:"ɪ",
-           j:"ᴊ",k:"ᴋ",l:"ʟ",m:"ᴍ",n:"ɴ",o:"ᴏ",p:"ᴘ",q:"ǫ",r:"ʀ",
-           s:"s",t:"ᴛ",u:"ᴜ",v:"ᴠ",w:"ᴡ",x:"x",y:"ʏ",z:"ᴢ"};
-  return t.toLowerCase().split("").map(c=>m[c]||c).join("");
 }
 function glitch(t){
   const m=["\u0301","\u0307","\u0308"];
@@ -132,17 +144,12 @@ const fonts=[
 ["𝖤𝗑𝖺𝗆𝗉𝗅𝖾",mapEN("𝖠")],
 ["Ｅｘａｍｐｌｅ",mapEN("Ａ")],
 
-["ТеКсТ",mapRU("Т")],
-["𝓣𝓮𝓴𝓼𝓽",mapRU("𝓣")],
-["𝕿𝖊𝖐𝖘𝖙",mapRU("𝕿")],
-
 ["Underline",combine("\u0332")],
 ["Double underline",combine("\u0333")],
 ["Strike",combine("\u0336")],
 ["Waves",combine("\u0330")],
 
 ["Wide",t=>t.split("").join(" ")],
-["Small caps",smallCaps],
 ["Glitch",glitch],
 
 ["UPPERCASE",t=>t.toUpperCase()],
@@ -153,7 +160,7 @@ const fonts=[
 function render(){
   const q=search.value.toLowerCase();
   const raw=input.value;
-  const text=translit(raw);
+  const text=dualText(raw);
   grid.innerHTML="";
   fonts.forEach(([name,fn])=>{
     if(!name.toLowerCase().includes(q))return;
