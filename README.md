@@ -1,8 +1,10 @@
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <title>Красивые шрифты</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
 body{
   margin:0;
@@ -48,6 +50,12 @@ textarea,input{
   font-size:15px;
 }
 input{margin-top:10px}
+.hint{
+  margin-top:8px;
+  font-size:13px;
+  opacity:.6;
+  text-align:center;
+}
 .grid{
   margin-top:14px;
   display:grid;
@@ -62,19 +70,32 @@ input{margin-top:10px}
   cursor:pointer;
   font-size:14px;
   user-select:none;
+  transition:.15s;
 }
-.style:hover{background:#242437}
-.footer{
-  margin:16px 0;
-  font-size:12px;
-  text-align:center;
-  opacity:.4;
+.style:active{
+  transform:scale(.96);
+  background:#2a2a40;
 }
+.toast{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#232337;
+  padding:10px 16px;
+  border-radius:12px;
+  font-size:13px;
+  opacity:0;
+  pointer-events:none;
+  transition:.3s;
+}
+.toast.show{opacity:1}
 </style>
 </head>
-<body>
 
+<body>
 <div class="wrapper">
+
 <h1>Красивые шрифты ✒️</h1>
 
 <div class="tabs">
@@ -83,157 +104,106 @@ input{margin-top:10px}
 </div>
 
 <textarea id="input" placeholder="Введите текст / Enter text..."></textarea>
-<input id="search" placeholder="Поиск стиля..." oninput="render()">
+<div class="hint" id="hint">Введите текст и нажмите на стиль ниже</div>
 
+<input id="search" placeholder="Поиск стиля..." oninput="render()">
 <div class="grid" id="grid"></div>
 
-<div class="footer">
-Нажми на стиль — текст скопируется
 </div>
-</div>
+
+<div class="toast" id="toast">Скопировано ✅</div>
 
 <script>
 let lang="en";
 
+/* ===== TRANSLIT (как в Telegram) ===== */
+const translitMap = {
+  yo:"ё", zh:"ж", ch:"ч", sh:"ш", sch:"щ", yu:"ю", ya:"я",
+  a:"а",b:"б",v:"в",g:"г",d:"д",e:"е",z:"з",
+  i:"и",j:"й",k:"к",l:"л",m:"м",n:"н",
+  o:"о",p:"п",r:"р",s:"с",t:"т",u:"у",
+  f:"ф",h:"х",c:"ц",y:"ы"
+};
+
+function translit(t){
+  if(/[а-яё]/i.test(t)) return t;
+  let s=t.toLowerCase();
+  Object.keys(translitMap).sort((a,b)=>b.length-a.length)
+    .forEach(k=>s=s.replaceAll(k,translitMap[k]));
+  return s;
+}
+
 /* ===== helpers ===== */
-
-function mapEN(start){
-  const base="abcdefghijklmnopqrstuvwxyz";
-  const code=start.codePointAt(0);
-  return t=>t.split("").map(c=>{
-    let i=base.indexOf(c.toLowerCase());
-    if(i==-1)return c;
-    return String.fromCodePoint(code+i);
-  }).join("");
-}
-
-function mapRU(start){
-  const base="абвгдеёжзийклмнопрстуфхцчшщъыьэюя";
-  const code=start.codePointAt(0);
-  return t=>t.split("").map(c=>{
-    let i=base.indexOf(c.toLowerCase());
-    if(i==-1)return c;
-    return String.fromCodePoint(code+i);
-  }).join("");
-}
-
 function combine(mark){
-  return t=>t.split("").map(c=>{
-    if(c===" ") return c;
-    return c + mark;
-  }).join("");
+  return t=>t.split("").map(c=>c===" "?c:c+mark).join("");
 }
-
-/* ===== special styles ===== */
-
-function smallCaps(t){
-  const m={
-    a:"ᴀ",b:"ʙ",c:"ᴄ",d:"ᴅ",e:"ᴇ",f:"ғ",
-    g:"ɢ",h:"ʜ",i:"ɪ",j:"ᴊ",k:"ᴋ",l:"ʟ",
-    m:"ᴍ",n:"ɴ",o:"ᴏ",p:"ᴘ",q:"ǫ",r:"ʀ",
-    s:"s",t:"ᴛ",u:"ᴜ",v:"ᴠ",w:"ᴡ",x:"x",y:"ʏ",z:"ᴢ"
-  };
-  return t.toLowerCase().split("").map(c=>m[c]||c).join("");
-}
-
-function circled(t){
-  const base="abcdefghijklmnopqrstuvwxyz";
-  const start=0x24D0;
-  return t.toLowerCase().split("").map(c=>{
-    let i=base.indexOf(c);
-    return i==-1?c:String.fromCodePoint(start+i);
-  }).join("");
-}
-
-function boxed(t){
-  const base="abcdefghijklmnopqrstuvwxyz";
-  const start=0x1F130;
-  return t.toUpperCase().split("").map(c=>{
-    let i=base.indexOf(c.toLowerCase());
-    return i==-1?c:String.fromCodePoint(start+i);
-  }).join("");
-}
-
+function wide(t){return t.split("").join(" ")}
+function extraWide(t){return t.split("").join("  ")}
 function glitch(t){
-  const marks=["\u0301","\u0302","\u0303","\u0307","\u0308"];
-  return t.split("").map(c=>{
-    if(c===" ") return c;
-    return c + marks[Math.floor(Math.random()*marks.length)];
-  }).join("");
+  const m=["\u0307","\u0301","\u0308","\u0303"];
+  return t.split("").map(c=>c===" "?c:c+m[Math.random()*m.length|0]).join("");
 }
 
 /* ===== fonts ===== */
+const commonStyles=[
+ ["Подчёркнутый", combine("\u0332")],
+ ["Зачёркнутый", combine("\u0336")],
+ ["Точки", combine("\u0323")],
+ ["Волны", combine("\u0330")],
+ ["Wide", wide],
+ ["Extra Wide", extraWide],
+ ["Glitch", glitch],
+ ["ВЕРХНИЙ РЕГИСТР", t=>t.toUpperCase()],
+ ["нижний регистр", t=>t.toLowerCase()]
+];
 
 const fontsEN=[
-["𝐄𝐱𝐚𝐦𝐩𝐥𝐞", mapEN("𝐀")],
-["𝘌𝘹𝘢𝘮𝘱𝘭𝘦", mapEN("𝘈")],
-["𝓔𝔁𝓪𝓶𝓹𝓵𝓮", mapEN("𝓐")],
-["𝖤𝗑𝖺𝗆𝗉𝗅𝖾", mapEN("𝖠")],
-["Ｅｘａｍｐｌｅ", mapEN("Ａ")],
-
-["Underline", combine("\u0332")],
-["Double underline", combine("\u0333")],
-["Strike", combine("\u0336")],
-["Dots below", combine("\u0323")],
-["Dots above", combine("\u0307")],
-["Waves", combine("\u0330")],
-["Cross", combine("\u033D")],
-
-["Wide", t=>t.split("").join(" ")],
-["Extra wide", t=>t.split("").join("  ")],
-
-["Small caps", smallCaps],
-["Circled", circled],
-["Boxed", boxed],
-["Glitch", glitch],
-
-["UPPERCASE", t=>t.toUpperCase()],
-["lowercase", t=>t.toLowerCase()]
+ ["𝐄𝐱𝐚𝐦𝐩𝐥𝐞", t=>t],
+ ...commonStyles
 ];
 
 const fontsRU=[
-["ТеКсТ", mapRU("Т")],
-["𝓣𝓮𝓴𝓼𝓽", mapRU("𝓣")],
-["𝕿𝖊𝖐𝖘𝖙", mapRU("𝕿")],
-["Подчёркнутый", combine("\u0332")],
-["Двойное подчёркивание", combine("\u0333")],
-["Зачёркнутый", combine("\u0336")],
-["Точки", combine("\u0323")],
-["Волны", combine("\u0330")],
-
-["Широкий", t=>t.split("").join(" ")],
-["ОЧЕНЬ ШИРОКИЙ", t=>t.split("").join("  ")],
-
-["ЗАГЛАВНЫЕ", t=>t.toUpperCase()],
-["строчные", t=>t.toLowerCase()]
+ ["ТеКсТ", t=>t],
+ ...commonStyles
 ];
 
-/* ===== ui ===== */
-
+/* ===== UI ===== */
 function switchLang(l){
   lang=l;
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   document.querySelectorAll(".tab")[l==="en"?0:1].classList.add("active");
+  hint.textContent = l==="ru"
+    ? "Можно писать латиницей — текст сам станет русским"
+    : "Введите текст и нажмите на стиль";
   render();
+}
+
+function showToast(){
+  toast.classList.add("show");
+  setTimeout(()=>toast.classList.remove("show"),1200);
 }
 
 function render(){
   const grid=document.getElementById("grid");
-  const q=document.getElementById("search").value.toLowerCase();
   grid.innerHTML="";
+  let text=input.value;
+  if(lang==="ru") text=translit(text);
+
   const list=lang==="en"?fontsEN:fontsRU;
   list.forEach(([name,fn])=>{
-    if(!name.toLowerCase().includes(q))return;
     const d=document.createElement("div");
     d.className="style";
-    d.textContent=fn(input.value||name);
-    d.onclick=()=>navigator.clipboard.writeText(fn(input.value));
+    d.textContent=fn(text||name);
+    d.onclick=()=>{
+      navigator.clipboard.writeText(fn(text));
+      showToast();
+    };
     grid.appendChild(d);
   });
 }
 
+input.oninput=render;
 render();
 </script>
-
 </body>
 </html>
